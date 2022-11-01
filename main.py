@@ -48,7 +48,19 @@ def get_journal_url(api_url: str, key: str) -> str:
 
 def get_journal(url: str, key: str) -> Dict[str, Iterable]:
     journal = requests.get(url, headers={"Authorization": f"Bearer {key}"}).json()
-    print(json.dumps(journal, indent=2))
+    return journal
+
+
+def parse_journal(journal: Dict[str, Iterable]) -> Dict[int, Iterable]:
+    new_journal = dict()
+    for entry in journal["data"]:
+        new_journal[entry["id"]] = {
+            "date": datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+            "title": entry["title"],
+            "post": entry["post"],
+            "created": datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ"),
+        }
+    return new_journal
 
 
 def main():
@@ -56,7 +68,8 @@ def main():
     api_key = config["oath_key"]
     api_url = config["api_url"]
     journal_url = get_journal_url(api_url=api_url, key=api_key)
-    get_journal(journal_url, api_key)
+    journal = get_journal(journal_url, api_key)
+    parse_journal(journal)
 
 
 if __name__ == "__main__":
