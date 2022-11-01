@@ -63,13 +63,36 @@ def parse_journal(journal: Dict[str, Iterable]) -> Dict[int, Iterable]:
     return new_journal
 
 
+def date_to_path(date: datetime) -> Path:
+    p = Path(str(date.year) + "/" + str(date.month))
+    return p
+
+
+def date_to_page(date: datetime) -> Path:
+    return Path(str(date.day) + ".txt")
+
+
+def journal_paths_exist(zim: Path, date: datetime) -> bool:
+    journal_present = zim.exists()
+    full_journal = zim.joinpath(date_to_path(date)).exists()
+    return all([journal_present, full_journal])
+
+
+def journal_page_exists(zim: Path, date: datetime) -> bool:
+    return zim.joinpath(date_to_path(date)).joinpath(date_to_page(date)).exists()
+
+
 def main():
     config = read_config()
     api_key = config["oath_key"]
     api_url = config["api_url"]
+    zim_path = Path(config["zim_journal_path"])
     journal_url = get_journal_url(api_url=api_url, key=api_key)
     journal = get_journal(journal_url, api_key)
-    parse_journal(journal)
+    new_journal = parse_journal(journal)
+    for entry in new_journal:
+        print(journal_paths_exist(zim=zim_path, date=new_journal[entry]["date"]))
+        print(journal_page_exists(zim=zim_path, date=new_journal[entry]["date"]))
 
 
 if __name__ == "__main__":
