@@ -4,11 +4,13 @@ from pathlib import Path
 import yaml
 import requests
 import json
+from datetime import datetime
+from typing import Dict, Iterable
 
 CONFIG_PATH = Path("./secrets/config.yaml")
 
 
-def read_config(config=CONFIG_PATH):
+def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
     with open(config, "r") as stream:
         try:
             config_out = yaml.safe_load(stream)
@@ -33,18 +35,18 @@ def read_config(config=CONFIG_PATH):
 #             'relationships_url': 'https://MONICA_API_URL/contacts/:contactId/relationships',
 #             'reminders_url': 'https://MONICA_API_URL/reminders',
 #             'statistics_url': 'https://MONICA_API_URL/statistics'}}
-def test_api(url, key):
+def test_api(url: str, key: str) -> bool:
     response = requests.get(url, headers={"Authorization": f"Bearer {key}"})
     r = "success" in response.json()
     return r
 
 
-def get_journal_url(api_url, key):
+def get_journal_url(api_url: str, key: str) -> str:
     response = requests.get(api_url, headers={"Authorization": f"Bearer {key}"}).json()
     return response["links"]["journal_url"]
 
 
-def get_journal(url, key):
+def get_journal(url: str, key: str) -> Dict[str, Iterable]:
     journal = requests.get(url, headers={"Authorization": f"Bearer {key}"}).json()
     print(json.dumps(journal, indent=2))
 
