@@ -12,3 +12,9 @@ A brief script to sync a journal from Monica to plain-text (i.e., Zim wiki)
 - [ ] Create (touch) Zim file for entry
 - [ ] Add journal entries to each text file
   - [ ] Have a way of creating entries/files in a reproducible way (to check if they need to be added to or rewritten/created)
+
+The current dilemma is that Zim (specifically Zim) will only have one file per day, while Monica may have an unlimited number.
+This presents a problem in determining if a file in Zim has all the entries for a particular day in Monica.
+Ideas:
+- Overwrite the Zim file with the concatenated data from Monica (simple)
+- Have Monica entries in a Zim file appear after a certain "tag" (little more complicated)
