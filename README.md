@@ -11,4 +11,4 @@ A brief script to sync a journal from Monica to plain-text (i.e., Zim wiki)
 - [ ] Make folder structure if it doesn't exist (per entry)
 - [ ] Create (touch) Zim file for entry
 - [ ] Add journal entries to each text file
-  - [ ] Have a way of creating entries/files in a reproducable way (to check if they need to be added to or rewritten/created)
+  - [ ] Have a way of creating entries/files in a reproducible way (to check if they need to be added to or rewritten/created)
