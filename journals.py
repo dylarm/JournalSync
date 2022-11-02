@@ -26,9 +26,9 @@ class ZimJournal:
                 day=int(file_date_parts[2][0:2]),
             )
             with journal[entry]["path"].open() as r:
-                journal[entry]["text"] = r.readlines()
+                journal[entry]["text"] = [s.rstrip() for s in r.readlines()]
             journal[entry]["creation_date"] = datetime.fromisoformat(
-                journal[entry]["text"][2][15:-1]
+                journal[entry]["text"][2][15:]
             )
         return journal
 
@@ -96,7 +96,7 @@ class MonicaJournal:
             new_journal[int(entry["id"])] = {
                 "date": datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
                 "title": entry["title"],
-                "post": entry["post"],
+                "post": entry["post"].splitlines(),
                 "created": datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ"),
             }
         return new_journal
