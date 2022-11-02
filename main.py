@@ -94,11 +94,17 @@ def read_journal_page(zim: Path, date: datetime) -> Iterable:
     return r_page
 
 
-def create_journal_page(zim: Path, date: datetime, header: List[str]):
+def create_journal_header(date: datetime, old_header: List[str]):
     date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
-    header[2] = (
-        header[2] + f"{date_str[:-2]}:{date_str[-2:]}\n"
+    old_header[2] = (
+        old_header[2] + f"{date_str[:-2]}:{date_str[-2:]}\n"
     )  # Because Zim is different
+    old_header.append(f"====== {date.strftime('%A %d %b %Y')} ======\n")
+    return old_header
+
+
+def create_journal_page(zim: Path, date: datetime, header: List[str]):
+    new_header = create_journal_header(date, header)
     print(header)
 
 
@@ -114,7 +120,7 @@ def main():
     #    print(journal_paths_exist(zim=zim_path, date=new_journal[entry]["date"]))
     #    print(journal_page_exists(zim=zim_path, date=new_journal[entry]["date"]))
     print(read_journal_page(zim_path, datetime(2022, 10, 31)))
-    create_journal_page(zim_path, datetime.now(), config["header"])
+    create_journal_page(zim_path, datetime.now(), list(config["header"]))
 
 
 if __name__ == "__main__":
