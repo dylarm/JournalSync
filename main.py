@@ -4,9 +4,9 @@ from pathlib import Path
 from pprint import pprint
 import yaml
 from datetime import datetime
-from typing import Dict, Iterable, List
+from typing import Dict
 
-from journals import ZimJournal
+from journals import ZimJournal, MonicaJournal
 
 CONFIG_PATH = Path("./secrets/config.yaml")
 
@@ -43,23 +43,12 @@ def journal_page_exists(zim: Path, date: datetime) -> bool:
     return get_page_path(zim, date).exists()
 
 
-def read_journal_page(zim: Path, date: datetime) -> Iterable:
-    page = get_page_path(zim, date)
-    with open(page, "r") as f:
-        r_page = f.readlines()
-        # r_page[5] is the first line of actual text
-    return r_page
-
-
-def create_journal_page(zim: Path, date: datetime, header: List[str]):
-    new_header = create_journal_header(date, header)
-    print(header)
-
-
 def main():
     config = read_config()
     z = ZimJournal(config)
     pprint(z.journal)
+    m = MonicaJournal(config, autoload=True)
+    pprint(m.journal)
 
 
 if __name__ == "__main__":

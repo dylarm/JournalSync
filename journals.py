@@ -41,7 +41,7 @@ class ZimJournal:
         new_header.append(f"====== {date.strftime('%A %d %b %Y')} ======\n")
         return new_header
 
-    def create_page(self, text: List[str]):
+    def create_page(self, date: datetime, text: List[str]):
         pass
 
 
@@ -49,7 +49,7 @@ class MonicaJournal:
     """Getting the journal from a Monica instance via the REST API"""
 
     def __init__(self, config, autoload=False):
-        self.api = config["api_path"]
+        self.api = config["api_url"]
         self.api_key = config["oath_key"]
         self.journal_url: str = ""
         self.journal: Dict[int, Iterable] = dict()
