@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+from typing import List, Dict, Iterable
 import requests
 
 
@@ -7,11 +8,11 @@ class ZimJournal:
     """A plaintext-ish journal"""
 
     def __init__(self, config):
-        self.zim = Path(config["zim_journal_path"])
-        self.blank_header = list(config["header"])
-        self.journal = self.__load_journal()
+        self.zim: Path = Path(config["zim_journal_path"])
+        self.blank_header: List[str] = list(config["header"])
+        self.journal: Dict[int, Iterable] = self.__load_journal()
 
-    def __load_journal(self):
+    def __load_journal(self) -> Dict[int, Iterable]:
         journal = {
             n: {"path": path}
             for n, path in enumerate(x for x in self.zim.glob("**/*.txt"))
@@ -31,7 +32,16 @@ class ZimJournal:
             )
         return journal
 
-    def create_page(self, text):
+    def __create_header(self, date: datetime) -> List[str]:
+        date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+        new_header = self.blank_header
+        new_header[2] = (
+            new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}\n"
+        )  # Because Zim is different
+        new_header.append(f"====== {date.strftime('%A %d %b %Y')} ======\n")
+        return new_header
+
+    def create_page(self, text: List[str]):
         pass
 
 
