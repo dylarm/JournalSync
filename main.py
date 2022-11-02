@@ -5,7 +5,7 @@ import yaml
 import requests
 import json
 from datetime import datetime
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List
 
 CONFIG_PATH = Path("./secrets/config.yaml")
 
@@ -78,8 +78,28 @@ def journal_paths_exist(zim: Path, date: datetime) -> bool:
     return all([journal_present, full_journal])
 
 
+def get_page_path(zim: Path, date: datetime) -> Path:
+    return zim.joinpath(date_to_path(date)).joinpath(date_to_page(date))
+
+
 def journal_page_exists(zim: Path, date: datetime) -> bool:
-    return zim.joinpath(date_to_path(date)).joinpath(date_to_page(date)).exists()
+    return get_page_path(zim, date).exists()
+
+
+def read_journal_page(zim: Path, date: datetime) -> Iterable:
+    page = get_page_path(zim, date)
+    with open(page, "r") as f:
+        r_page = f.readlines()
+        # r_page[5] is the first line of actual text
+    return r_page
+
+
+def create_journal_page(zim: Path, date: datetime, header: List[str]):
+    date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+    header[2] = (
+        header[2] + f"{date_str[:-2]}:{date_str[-2:]}\n"
+    )  # Because Zim is different
+    print(header)
 
 
 def main():
@@ -87,12 +107,14 @@ def main():
     api_key = config["oath_key"]
     api_url = config["api_url"]
     zim_path = Path(config["zim_journal_path"])
-    journal_url = get_journal_url(api_url=api_url, key=api_key)
-    journal = get_journal(journal_url, api_key)
-    new_journal = parse_journal(journal)
-    for entry in new_journal:
-        print(journal_paths_exist(zim=zim_path, date=new_journal[entry]["date"]))
-        print(journal_page_exists(zim=zim_path, date=new_journal[entry]["date"]))
+    # journal_url = get_journal_url(api_url=api_url, key=api_key)
+    # journal = get_journal(journal_url, api_key)
+    # new_journal = parse_journal(journal)
+    # for entry in new_journal:
+    #    print(journal_paths_exist(zim=zim_path, date=new_journal[entry]["date"]))
+    #    print(journal_page_exists(zim=zim_path, date=new_journal[entry]["date"]))
+    print(read_journal_page(zim_path, datetime(2022, 10, 31)))
+    create_journal_page(zim_path, datetime.now(), config["header"])
 
 
 if __name__ == "__main__":
