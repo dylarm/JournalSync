@@ -51,11 +51,10 @@ class MonicaJournal:
     def __init__(self, config, autoload=False):
         self.api = config["api_path"]
         self.api_key = config["oath_key"]
+        self.journal_url: str = ""
+        self.journal: Dict[int, Iterable] = dict()
         if autoload:
             self.journal = self.load_journal()
-        else:
-            self.journal = None
-            self.journal_url = None
 
     def __test_api(self) -> bool:
         response = requests.get(
@@ -86,7 +85,7 @@ class MonicaJournal:
         ).json()
         return response["links"]["journal_url"]
 
-    def load_journal(self):
+    def load_journal(self) -> Dict[int, Iterable]:
         """Retrieve the journal from Monica and make it look nice"""
         self.journal_url = self.__get_journal_url()
         journal = requests.get(
@@ -94,7 +93,7 @@ class MonicaJournal:
         ).json()
         new_journal = dict()
         for entry in journal["data"]:
-            new_journal[entry["id"]] = {
+            new_journal[int(entry["id"])] = {
                 "date": datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
                 "title": entry["title"],
                 "post": entry["post"],
