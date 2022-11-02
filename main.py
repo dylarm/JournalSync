@@ -64,12 +64,12 @@ def parse_journal(journal: Dict[str, Iterable]) -> Dict[int, Iterable]:
 
 
 def date_to_path(date: datetime) -> Path:
-    p = Path(str(date.year) + "/" + str(date.month))
+    p = Path(str(date.year) + "/" + str(date.month).zfill(2))
     return p
 
 
 def date_to_page(date: datetime) -> Path:
-    return Path(str(date.day) + ".txt")
+    return Path(str(date.day).zfill(2) + ".txt")
 
 
 def journal_paths_exist(zim: Path, date: datetime) -> bool:
