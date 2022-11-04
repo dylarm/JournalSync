@@ -19,13 +19,15 @@ def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
         except yaml.YAMLError as exc:
             print(exc)
             config_out = dict()
-    if any("MONICA_API" in config_out[key] for key in config_out):
+    secret_keys = [key for key in config_out if "MONICA_API" in config_out[key]]
+    if secret_keys:
         with SECRET_CONFIG_PATH.open() as stream:
             try:
-                config_out = yaml.safe_load(stream)
+                config_secret = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
-                print(exc)
-                config_out = dict()
+                print("Could not load secret keys\n", exc)
+        for key in secret_keys:
+            config_out[key] = config_secret[key]
     return config_out
 
 

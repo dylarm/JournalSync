@@ -6,3 +6,6 @@ header:
   - "Wiki-Format: zim 0.6"
   - "Creation-Date: "
   - ""
+monica_tag:
+  start: "<Monica>"
+  end: "</Monica>"
