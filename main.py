@@ -58,7 +58,7 @@ def main():
     config = read_config()
     z = ZimJournal(config)
     pprint(z.journal)
-    m = MonicaJournal(config, autoload=True)
+    m = MonicaJournal(config, autoload=False)
     pprint(m.journal)
 
 

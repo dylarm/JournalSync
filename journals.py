@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import datetime
-from typing import List, Dict, Iterable
+from typing import List, Dict, Iterable, Tuple, Union
 import requests
 
 
@@ -10,7 +10,8 @@ class ZimJournal:
     def __init__(self, config):
         self.zim: Path = Path(config["zim_journal_path"])
         self.blank_header: List[str] = list(config["header"])
-        self.titles: Dict[int, str] = dict(config["titles"])
+        self.title: Dict[int, str] = dict(config["title"])
+        self.tags: Dict[str, str] = dict(config["monica_tag"])
         self.journal: Dict[int, Iterable] = self.__load_journal()
 
     def __load_journal(self) -> Dict[int, Iterable]:
@@ -31,6 +32,7 @@ class ZimJournal:
             journal[entry]["creation_date"] = datetime.fromisoformat(
                 journal[entry]["text"][2][15:]
             )
+            journal[entry]["tag"] = self.__find_tags(journal[entry]["text"])
         return journal
 
     def __create_header(self, date: datetime) -> List[str]:
@@ -40,9 +42,18 @@ class ZimJournal:
             new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}"
         )  # Because Zim is different
         new_header.append(
-            f"{self.titles[1]} {date.strftime('%A %d %b %Y')} {self.titles[1]}"
+            f"{self.title[1]} {date.strftime('%A %d %b %Y')} {self.title[1]}"
         )
         return new_header
+
+    def __find_tags(self, text: List[str]) -> Tuple[int, int]:
+        """Returns index of start tag, and negative index to insert before end tag"""
+        try:
+            start = text.index(self.tags["start"])
+            end = text.index(self.tags["end"])
+        except ValueError:
+            start, end = len(text), len(text) - 1
+        return start, end - len(text)
 
     def create_page(self, date: datetime, text: List[str]):
         pass
