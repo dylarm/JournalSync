@@ -3,8 +3,8 @@
 from pathlib import Path
 from pprint import pprint
 import yaml
-from datetime import datetime
-from typing import Dict
+from datetime import datetime, timedelta
+from typing import Dict, List
 
 from journals import ZimJournal, MonicaJournal
 
@@ -54,13 +54,28 @@ def journal_page_exists(zim: Path, date: datetime) -> bool:
     return get_page_path(zim, date).exists()
 
 
+def zim_to_monica_entries(
+    zim_journal: ZimJournal, monica_journal: MonicaJournal
+) -> Dict[int, List[int]]:
+    matches = dict()
+    for zim_entry in zim_journal.journal:
+        zim_date = zim_journal.journal[zim_entry]["file_date"]
+        entry_dates = list()
+        for monica_entry in monica_journal.journal:
+            monica_date = monica_journal.journal[monica_entry]["date"]
+            if abs(monica_date - zim_date) < timedelta(days=1):
+                entry_dates.append(monica_entry)
+        matches[zim_entry] = entry_dates
+    return matches
+
+
 def main():
     config = read_config()
     z = ZimJournal(config)
     z.insert_text(0, ["test text", "other text"])
-    pprint(z.journal)
-    m = MonicaJournal(config, autoload=False)
+    m = MonicaJournal(config, autoload=True)
     pprint(m.journal)
+    print(zim_to_monica_entries(z, m))
 
 
 if __name__ == "__main__":
