@@ -57,6 +57,7 @@ def journal_page_exists(zim: Path, date: datetime) -> bool:
 def main():
     config = read_config()
     z = ZimJournal(config)
+    z.insert_text(0, ["test text", "other text"])
     pprint(z.journal)
     m = MonicaJournal(config, autoload=False)
     pprint(m.journal)
