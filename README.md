@@ -8,7 +8,8 @@ A brief script to sync a journal from Monica to plain-text (i.e., Zim wiki)
 - Checking if folder structure is already present
 
 ## Next steps
-- [ ] Create skeleton `config.yml` file (and maybe load if populated)
+- [ ] Create an actual flow for syncing rather than working at it haphazardly
+- [x] Create skeleton `config.yml` file (and maybe load if populated)
 - [ ] Make folder structure if it doesn't exist (per entry)
 - [ ] Create (touch) Zim file for entry
 - [ ] Add journal entries to each text file
@@ -19,3 +20,4 @@ This presents a problem in determining if a file in Zim has all the entries for 
 Ideas:
 - Overwrite the Zim file with the concatenated data from Monica (simple)
 - Have Monica entries in a Zim file appear after a certain "tag" (little more complicated)
+  - This is likely the way it'll go
