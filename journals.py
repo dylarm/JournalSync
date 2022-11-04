@@ -3,7 +3,9 @@ from datetime import datetime
 from typing import List, Dict, Iterable, Tuple, Union
 import requests
 
-Journal = Dict[int, Dict[str, Union[datetime, Path, Tuple[int, int], List[str]]]]
+Journal = Dict[
+    int, Dict[str, Union[datetime, Path, Tuple[int, int], List[str], List[int]]]
+]
 
 
 class ZimJournal:
@@ -35,6 +37,7 @@ class ZimJournal:
                 journal[entry]["text"][2][15:]
             )
             journal[entry]["tag"] = self.__find_tags(journal[entry]["text"])
+            journal[entry]["entries"] = list()
         return journal
 
     def __create_header(self, date: datetime) -> List[str]:
@@ -56,6 +59,10 @@ class ZimJournal:
         except ValueError:
             start, end = len(text), len(text) - 1
         return start, end - len(text)
+
+    def __find_monica_entries(self, entry: int, titles: List[str]) -> List[int]:
+        entries = [self.journal[entry]["text"].index(title) for title in titles]
+        return entries
 
     def insert_text(self, entry: int, new_text: List[str]) -> None:
         tag, text = self.journal[entry]["tag"], self.journal[entry]["text"]
