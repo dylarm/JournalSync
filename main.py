@@ -59,13 +59,16 @@ def zim_to_monica_entries(
 ) -> Dict[int, List[int]]:
     matches = dict()
     for zim_entry in zim_journal.journal:
-        zim_date = zim_journal.journal[zim_entry]["file_date"].date()
+        try:
+            zim_date = zim_journal.journal[zim_entry]["date"].date()
+        except KeyError:
+            break
         entry_dates = list()
         for monica_entry in monica_journal.journal:
             try:
                 monica_date = monica_journal.journal[monica_entry]["date"].date()
             except KeyError:
-                monica_date = None
+                break
             if monica_date == zim_date:
                 entry_dates.append(monica_entry)
         matches[zim_entry] = entry_dates
@@ -77,6 +80,7 @@ def main():
     z = ZimJournal(config)
     z.insert_text(0, ["test text", "other text"])
     m = MonicaJournal(config, autoload=True)
+    pprint(z.journal)
     pprint(m.journal)
     print(zim_to_monica_entries(z, m))
 

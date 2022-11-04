@@ -4,7 +4,11 @@ from typing import List, Dict, Iterable, Tuple, Union
 import requests
 
 Journal = Dict[
-    int, Dict[str, Union[datetime, Path, Tuple[int, int], List[str], List[int]]]
+    int,
+    Dict[
+        Union[str, datetime],
+        Union[datetime, Path, Tuple[int, int], List[str], List[int]],
+    ],
 ]
 
 
@@ -26,7 +30,7 @@ class ZimJournal:
         for entry in journal:
             file_date_parts = journal[entry]["path"].parts[-3:]
             # tuple (year, month, day.txt)
-            journal[entry]["file_date"] = datetime(
+            journal[entry]["date"] = datetime(
                 year=int(file_date_parts[0]),
                 month=int(file_date_parts[1]),
                 day=int(file_date_parts[2][0:2]),
@@ -38,6 +42,7 @@ class ZimJournal:
             )
             journal[entry]["tag"] = self.__find_tags(journal[entry]["text"])
             journal[entry]["entries"] = list()
+        journal[-1] = collate_entry_dates(journal)
         return journal
 
     def __create_header(self, date: datetime) -> List[str]:
@@ -131,8 +136,22 @@ class MonicaJournal:
                 "post": entry["post"].splitlines(),
                 "created": datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ"),
             }
+        new_journal[-1] = collate_entry_dates(new_journal)
         return new_journal
 
     def load_journal(self) -> None:
         self.journal = self.__load_journal()
         return
+
+
+def collate_entry_dates(journal: Journal) -> Dict[datetime, List[int]]:
+    dates = set(
+        datetime.combine(journal[entry]["date"].date(), datetime.min.time())
+        for entry in journal
+    )
+    entries = dict()
+    for date in dates:
+        entries[date] = [
+            entry for entry in journal if journal[entry]["date"].date() == date.date()
+        ]
+    return entries
