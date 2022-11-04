@@ -1,0 +1,8 @@
+oath_key: MONICA_API_KEY
+api_url: https://MONICA_API_URL/api
+zim_journal_path: /home/MONICA_API_LOCAL_PLAINTEXT_DIR/Zim/Main/Journal
+header:
+  - "Content-Type: text/x-zim-wiki"
+  - "Wiki-Format: zim 0.6"
+  - "Creation-Date: "
+  - ""

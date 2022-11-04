@@ -8,15 +8,24 @@ from typing import Dict
 
 from journals import ZimJournal, MonicaJournal
 
-CONFIG_PATH = Path("./secrets/config.yaml")
+CONFIG_PATH = Path("./config.yaml")
+SECRET_CONFIG_PATH = Path("./secrets/config.yaml")
 
 
 def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
-    with open(config, "r") as stream:
+    with CONFIG_PATH.open() as stream:
         try:
             config_out = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
+            config_out = dict()
+    if any("MONICA_API" in config_out[key] for key in config_out):
+        with SECRET_CONFIG_PATH.open() as stream:
+            try:
+                config_out = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+                config_out = dict()
     return config_out
 
 
