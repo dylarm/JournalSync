@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import List, Dict, Iterable, Tuple, Union
 import requests
 
+Journal = Dict[int, Dict[str, Union[datetime, Path, Tuple[int, int], List[str]]]]
+
 
 class ZimJournal:
     """A plaintext-ish journal"""
@@ -12,9 +14,9 @@ class ZimJournal:
         self.blank_header: List[str] = list(config["header"])
         self.title: Dict[int, str] = dict(config["title"])
         self.tags: Dict[str, str] = dict(config["monica_tag"])
-        self.journal: Dict[int, Iterable] = self.__load_journal()
+        self.journal: Journal = self.__load_journal()
 
-    def __load_journal(self) -> Dict[int, Iterable]:
+    def __load_journal(self) -> Journal:
         journal = {
             n: {"path": path}
             for n, path in enumerate(x for x in self.zim.glob("**/*.txt"))
