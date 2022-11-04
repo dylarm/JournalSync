@@ -58,16 +58,12 @@ class ZimJournal:
         return start, end - len(text)
 
     def insert_text(self, entry: int, new_text: List[str]) -> None:
-        if self.journal[entry]["tag"][0] == len(self.journal[entry]["text"]):
-            self.journal[entry]["text"].extend(
-                ["", self.tags["start"], self.tags["end"]]
-            )
+        tag, text = self.journal[entry]["tag"], self.journal[entry]["text"]
+        if tag[0] == len(text):
+            text.extend(["", self.tags["start"], self.tags["end"]])
             self.journal[entry]["tag"] = self.__find_tags(self.journal[entry]["text"])
-        self.journal[entry]["text"] = (
-            self.journal[entry]["text"][: self.journal[entry]["tag"][1]]
-            + new_text
-            + self.journal[entry]["text"][self.journal[entry]["tag"][1] :]
-        )
+            tag = self.journal[entry]["tag"]
+        self.journal[entry]["text"] = text[: tag[1]] + new_text + text[tag[1] :]
         return
 
     def create_page(self, date: datetime, text: List[str]):
