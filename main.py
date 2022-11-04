@@ -59,11 +59,14 @@ def zim_to_monica_entries(
 ) -> Dict[int, List[int]]:
     matches = dict()
     for zim_entry in zim_journal.journal:
-        zim_date = zim_journal.journal[zim_entry]["file_date"]
+        zim_date = zim_journal.journal[zim_entry]["file_date"].date()
         entry_dates = list()
         for monica_entry in monica_journal.journal:
-            monica_date = monica_journal.journal[monica_entry]["date"]
-            if abs(monica_date - zim_date) < timedelta(days=1):
+            try:
+                monica_date = monica_journal.journal[monica_entry]["date"].date()
+            except KeyError:
+                monica_date = None
+            if monica_date == zim_date:
                 entry_dates.append(monica_entry)
         matches[zim_entry] = entry_dates
     return matches
