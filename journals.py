@@ -10,6 +10,7 @@ class ZimJournal:
     def __init__(self, config):
         self.zim: Path = Path(config["zim_journal_path"])
         self.blank_header: List[str] = list(config["header"])
+        self.titles: Dict[int, str] = dict(config["titles"])
         self.journal: Dict[int, Iterable] = self.__load_journal()
 
     def __load_journal(self) -> Dict[int, Iterable]:
@@ -36,9 +37,11 @@ class ZimJournal:
         date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
         new_header = self.blank_header
         new_header[2] = (
-            new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}\n"
+            new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}"
         )  # Because Zim is different
-        new_header.append(f"====== {date.strftime('%A %d %b %Y')} ======\n")
+        new_header.append(
+            f"{self.titles[1]} {date.strftime('%A %d %b %Y')} {self.titles[1]}"
+        )
         return new_header
 
     def create_page(self, date: datetime, text: List[str]):
