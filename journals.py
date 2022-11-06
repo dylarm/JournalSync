@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Iterable, Tuple, Union
 import requests
+import os
 
 # format of Journal dict:
 # {datetime1: {entries: [int],
@@ -93,6 +94,9 @@ class MonicaJournal:
         self.api_key: str = config["oath_key"]
         self.monica_title_index: int = int(config["monica_title"])
         self.titles: Dict[int, str] = dict(config["titles"])
+        self.entry_sep: str = str(config["entry_sep"])
+        self.zim: Path = Path(config["zim_journal_path"])
+        self.zim_header: List[str] = list(config["zim_header"])
         self.journal_url: str = ""
         self.journal: Journal = dict()
         if autoload:
@@ -138,11 +142,11 @@ class MonicaJournal:
             n = int(entry["id"])
             dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")
             ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-            post_title = f"{entry['title']}, "
             post = create_monica_post(
                 text=entry["post"],
                 title=f"{entry['title']}, {ctime}",  # add the time so every title is unique
                 title_fmt=self.titles[self.monica_title_index],
+                sep=self.entry_sep,
             )
             if dtime in new_journal:
                 new_journal[dtime]["entries"].append(n)
@@ -184,9 +188,14 @@ def create_monica_post_title(title: str, title_fmt: str) -> str:
     return f"{title_fmt} {title} {title_fmt}"
 
 
-def create_monica_post(text: str, title: str, title_fmt: str) -> List[str]:
+def create_monica_post(
+    text: str, title: str, title_fmt: str, sep: Union[str, None] = None
+) -> List[str]:
     """Create the text for a Monica entry in a Zim page"""
-    entry = [create_monica_post_title(title, title_fmt)]
+    if sep is None:
+        entry = [create_monica_post_title(title, title_fmt)]
+    else:
+        entry = [sep, create_monica_post_title(title, title_fmt)]
     for line in text.splitlines():
         entry.append(line)
     entry.append("")
