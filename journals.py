@@ -62,8 +62,10 @@ class MonicaJournal:
     """Getting the journal from a Monica instance via the REST API"""
 
     def __init__(self, config, autoload=False):
-        self.api = config["api_url"]
-        self.api_key = config["oath_key"]
+        self.api: str = config["api_url"]
+        self.api_key: str = config["oath_key"]
+        self.monica_title_index: int = int(config["monica_title"])
+        self.titles: Dict[int, str] = dict(config["titles"])
         self.journal_url: str = ""
         self.journal: Journal = dict()
         if autoload:
@@ -106,13 +108,18 @@ class MonicaJournal:
         ).json()
         new_journal = dict()
         for entry in journal["data"]:
-            new_journal[int(entry["id"])] = {
-                "date": datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                "title": entry["title"],
-                "post": entry["post"].splitlines(),
-                "created": datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ"),
-            }
-        new_journal[-1] = collate_entry_dates(new_journal)
+            n = int(entry["id"])
+            dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            post = create_monica_post(
+                text=entry["post"],
+                title=entry["title"],  # Will be "None" if no title
+                title_fmt=self.titles[self.monica_title_index],
+            )
+            if dtime in new_journal:
+                new_journal[dtime]["entries"].append(n)
+                new_journal[dtime][n] = post
+            else:
+                new_journal[dtime] = {"entries": [n], n: post}
         return new_journal
 
     def load_journal(self) -> None:
@@ -125,3 +132,19 @@ def zim_path_datetime(path: Path) -> datetime:
     # tuple(year, month, day.txt)
     dtime = datetime(year=int(parts[0]), month=int(parts[1]), day=int(parts[2]))
     return dtime
+
+
+def datetime_zim_path(dtime: datetime, root: Path) -> Path:
+    full_path = root.joinpath(
+        Path(f"{dtime.year}/{str(dtime.month).zfill(2)}/{str(dtime.day).zfill(2)}.txt")
+    )
+    return full_path
+
+
+def create_monica_post(text: str, title: str, title_fmt: str) -> List[str]:
+    """Create the text for a Monica entry in a Zim page"""
+    entry = [f"{title_fmt} {title} {title_fmt}"]
+    for line in text.splitlines():
+        entry.append(line)
+    entry.append("")
+    return entry

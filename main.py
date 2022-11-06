@@ -19,7 +19,7 @@ def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
         except yaml.YAMLError as exc:
             print(exc)
             config_out = dict()
-    secret_keys = [key for key in config_out if "MONICA_API" in config_out[key]]
+    secret_keys = [key for key in config_out if "MONICA_API" in str(config_out[key])]
     if secret_keys:
         with SECRET_CONFIG_PATH.open() as stream:
             try:
@@ -79,6 +79,8 @@ def main():
     config = read_config()
     z = ZimJournal(config)
     pprint(z.journal)
+    m = MonicaJournal(config, autoload=True)
+    pprint(m.journal)
 
 
 if __name__ == "__main__":
