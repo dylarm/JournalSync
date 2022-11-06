@@ -37,8 +37,15 @@ class ZimJournal:
                 new_journal[jtime][n].append(self.tags["end"])
         return new_journal
 
-    def __create_header(self, date: datetime) -> List[str]:
-        new_header = []
+    def __create_page_header(self, date: datetime) -> List[str]:
+        new_header = self.zim_header
+        date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+        new_header[2] = (
+            new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}"
+        )  # Because Zim is different
+        new_header.append(
+            f"{self.title[1]} {date.strftime('%A %d %b %Y')} {self.title[1]}"
+        )
         return new_header
 
     def __find_tags(self, text: List[str]) -> Tuple[int, int]:
