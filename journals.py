@@ -1,8 +1,9 @@
-from pathlib import Path
-from datetime import datetime
-from typing import List, Dict, Iterable, Tuple, Union
-import requests
 import os
+from datetime import datetime
+from pathlib import Path
+from typing import List, Dict, Tuple, Union
+
+import requests
 
 # format of Journal dict:
 # {datetime1: {entries: [int],
