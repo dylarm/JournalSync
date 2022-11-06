@@ -57,9 +57,14 @@ class ZimJournal:
             start, end = len(text), len(text) - 1
         return start, end - len(text)
 
-    def __find_monica_entries(self, entry: int, titles: List[str]) -> List[int]:
-        entries = []
-        return entries
+    def __find_monica_entry(self, dtime: datetime, title: str) -> int:
+        entry = self.journal[dtime]["entries"][0]
+        entry_text = self.journal[dtime][entry]
+        try:
+            n = entry_text.index(title)
+        except ValueError:
+            n = -1
+        return n
 
     def insert_text(self, entry: int, new_text: List[str]) -> None:
         return
@@ -120,9 +125,11 @@ class MonicaJournal:
         for entry in journal["data"]:
             n = int(entry["id"])
             dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+            post_title = f"{entry['title']}, "
             post = create_monica_post(
                 text=entry["post"],
-                title=entry["title"],  # Will be "None" if no title
+                title=f"{entry['title']}, {ctime}",  # add the time so every title is unique
                 title_fmt=self.titles[self.monica_title_index],
             )
             if dtime in new_journal:
@@ -135,6 +142,13 @@ class MonicaJournal:
     def load_journal(self) -> None:
         self.journal = self.__load_journal()
         return
+
+    def get_titles(self, dtime: datetime) -> List[str]:
+        titles = []
+        journal = self.journal[dtime]
+        for n in journal["entries"]:
+            titles.append(journal[n][0])
+        return titles
 
 
 def zim_path_datetime(path: Path) -> datetime:
