@@ -26,10 +26,13 @@ class ZimJournal:
     def __load_journal(self) -> Journal:
         files = self.zim.glob("**/*.txt")
         raw_journal = []
-        for file in files:
+        new_journal = dict()
+        for n, file in enumerate(files):
             with file.open() as f:
-                raw_journal.append(f.readlines())
-        return raw_journal
+                entry = f.readlines()
+            jtime = zim_path_datetime(file)
+            new_journal[jtime] = {"entries": [n], n: [line.rstrip() for line in entry]}
+        return new_journal
 
     def __create_header(self, date: datetime) -> List[str]:
         new_header = []
@@ -115,3 +118,10 @@ class MonicaJournal:
     def load_journal(self) -> None:
         self.journal = self.__load_journal()
         return
+
+
+def zim_path_datetime(path: Path) -> datetime:
+    parts = (*path.parts[-3:-1], path.stem)
+    # tuple(year, month, day.txt)
+    dtime = datetime(year=int(parts[0]), month=int(parts[1]), day=int(parts[2]))
+    return dtime
