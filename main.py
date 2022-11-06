@@ -77,10 +77,13 @@ def zim_to_monica_entries(
 
 def main():
     config = read_config()
-    z = ZimJournal(config)
-    pprint(z.journal)
     m = MonicaJournal(config, autoload=True)
-    pprint(m.journal)
+    print(f"Monica journal has {len(m.journal)} dates:")
+    for d in m.journal:
+        print(f"\t{d.date()}: {len(m.journal[d]['entries'])} entries")
+    print("Writing to Zim")
+    m._write_to_zim()
+    print("Finished writing")
 
 
 if __name__ == "__main__":

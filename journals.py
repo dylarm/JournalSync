@@ -169,6 +169,29 @@ class MonicaJournal:
     def get_all_titles(self) -> Dict[datetime, List[str]]:
         return {dtime: self.get_titles_for_date(dtime) for dtime in self.journal}
 
+    def _make_zim_page(self, dtime: datetime) -> List[str]:
+        entries = self.journal[dtime]["entries"]
+        text = self.zim_header.copy()
+        date_str = dtime.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
+        text[2] = text[2] + f"{date_str[:-2]}:{date_str[-2:]}"
+        text.append(
+            f"{self.titles[1]} {dtime.strftime('%A %d %b %Y')} {self.titles[1]}"
+        )
+        text.append("")
+        for entry in entries:
+            text.extend(self.journal[dtime][entry])
+        return text
+
+    def _write_to_zim(self):
+        """Just brute-force writing Monica entries to Zim, overwriting if necessary
+
+        This is so that I can have something that works *now*, and then can make it better later
+        """
+        for dtime in self.journal:
+            file = datetime_zim_path(dtime, root=self.zim)
+            text = self._make_zim_page(dtime)
+            file.write_text(os.linesep.join(text))
+
 
 def zim_path_datetime(path: Path) -> datetime:
     parts = (*path.parts[-3:-1], path.stem)
