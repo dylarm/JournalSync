@@ -143,12 +143,15 @@ class MonicaJournal:
         self.journal = self.__load_journal()
         return
 
-    def get_titles(self, dtime: datetime) -> List[str]:
+    def get_titles_for_date(self, dtime: datetime) -> List[str]:
         titles = []
         journal = self.journal[dtime]
         for n in journal["entries"]:
             titles.append(journal[n][0])
         return titles
+
+    def get_all_titles(self) -> Dict[datetime, List[str]]:
+        return {dtime: self.get_titles_for_date(dtime) for dtime in self.journal}
 
 
 def zim_path_datetime(path: Path) -> datetime:
