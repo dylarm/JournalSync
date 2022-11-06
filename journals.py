@@ -66,11 +66,15 @@ class ZimJournal:
             n = -1
         return n
 
-    def insert_text(self, entry: int, new_text: List[str]) -> None:
-        return
-
-    def create_page(self, date: datetime, text: List[str]):
-        pass
+    def find_monica_entries(self, dtime: datetime, titles: List[str]) -> List[int]:
+        entry_text = self.journal[dtime]["entries"][0]
+        monica_entries = []
+        for title in titles:
+            try:
+                monica_entries.append(entry_text.index(title))
+            except ValueError:
+                pass
+        return monica_entries
 
 
 class MonicaJournal:
