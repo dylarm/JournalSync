@@ -25,13 +25,16 @@ class ZimJournal:
 
     def __load_journal(self) -> Journal:
         files = self.zim.glob("**/*.txt")
-        raw_journal = []
         new_journal = dict()
         for n, file in enumerate(files):
             with file.open() as f:
                 entry = f.readlines()
             jtime = zim_path_datetime(file)
             new_journal[jtime] = {"entries": [n], n: [line.rstrip() for line in entry]}
+            tag_loc = self.__find_tags(new_journal[jtime][n])
+            if tag_loc[0] == len(new_journal[jtime][n]):
+                new_journal[jtime][n].append(self.tags["start"])
+                new_journal[jtime][n].append(self.tags["end"])
         return new_journal
 
     def __create_header(self, date: datetime) -> List[str]:
