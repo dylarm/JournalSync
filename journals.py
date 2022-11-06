@@ -76,6 +76,14 @@ class ZimJournal:
                 pass
         return monica_entries
 
+    def update_page(self, dtime: datetime, entries: Dict[int, List[str]]):
+        page_text = self.journal[dtime][self.journal[dtime]["entries"][0]]
+        tags = self.__find_tags(page_text)
+        for entry in entries:
+            positions = self.find_monica_entries(dtime, entries[entry])
+            pass
+        return
+
 
 class MonicaJournal:
     """Getting the journal from a Monica instance via the REST API"""
