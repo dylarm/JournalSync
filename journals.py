@@ -144,9 +144,13 @@ def datetime_zim_path(dtime: datetime, root: Path) -> Path:
     return full_path
 
 
+def create_monica_post_title(title: str, title_fmt: str) -> str:
+    return f"{title_fmt} {title} {title_fmt}"
+
+
 def create_monica_post(text: str, title: str, title_fmt: str) -> List[str]:
     """Create the text for a Monica entry in a Zim page"""
-    entry = [f"{title_fmt} {title} {title_fmt}"]
+    entry = [create_monica_post_title(title, title_fmt)]
     for line in text.splitlines():
         entry.append(line)
     entry.append("")
