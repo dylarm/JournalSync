@@ -3,13 +3,14 @@ from datetime import datetime
 from typing import List, Dict, Iterable, Tuple, Union
 import requests
 
-Journal = Dict[
-    int,
-    Dict[
-        Union[str, datetime],
-        Union[datetime, Path, Tuple[int, int], List[str], List[int]],
-    ],
-]
+# format of Journal dict:
+# {datetime1: {entries: [int],
+#              0: [text],
+#              1: [text], etc.},
+#  datetime2: {entries: [int],
+#              2: [text],
+#              3: [text], etc.}}
+Journal = Dict[datetime, Dict[Union[int, str], List[Union[int, str]]]]
 
 
 class ZimJournal:
@@ -17,43 +18,21 @@ class ZimJournal:
 
     def __init__(self, config):
         self.zim: Path = Path(config["zim_journal_path"])
-        self.blank_header: List[str] = list(config["header"])
-        self.title: Dict[int, str] = dict(config["title"])
+        self.zim_header: List[str] = list(config["zim_header"])
+        self.title: Dict[int, str] = dict(config["titles"])
         self.tags: Dict[str, str] = dict(config["monica_tag"])
         self.journal: Journal = self.__load_journal()
 
     def __load_journal(self) -> Journal:
-        journal = {
-            n: {"path": path}
-            for n, path in enumerate(x for x in self.zim.glob("**/*.txt"))
-        }
-        for entry in journal:
-            file_date_parts = journal[entry]["path"].parts[-3:]
-            # tuple (year, month, day.txt)
-            journal[entry]["date"] = datetime(
-                year=int(file_date_parts[0]),
-                month=int(file_date_parts[1]),
-                day=int(file_date_parts[2][0:2]),
-            )
-            with journal[entry]["path"].open() as r:
-                journal[entry]["text"] = [s.rstrip() for s in r.readlines()]
-            journal[entry]["creation_date"] = datetime.fromisoformat(
-                journal[entry]["text"][2][15:]
-            )
-            journal[entry]["tag"] = self.__find_tags(journal[entry]["text"])
-            journal[entry]["entries"] = list()
-        journal[-1] = collate_entry_dates(journal)
-        return journal
+        files = self.zim.glob("**/*.txt")
+        raw_journal = []
+        for file in files:
+            with file.open() as f:
+                raw_journal.append(f.readlines())
+        return raw_journal
 
     def __create_header(self, date: datetime) -> List[str]:
-        date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
-        new_header = self.blank_header
-        new_header[2] = (
-            new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}"
-        )  # Because Zim is different
-        new_header.append(
-            f"{self.title[1]} {date.strftime('%A %d %b %Y')} {self.title[1]}"
-        )
+        new_header = []
         return new_header
 
     def __find_tags(self, text: List[str]) -> Tuple[int, int]:
@@ -66,16 +45,10 @@ class ZimJournal:
         return start, end - len(text)
 
     def __find_monica_entries(self, entry: int, titles: List[str]) -> List[int]:
-        entries = [self.journal[entry]["text"].index(title) for title in titles]
+        entries = []
         return entries
 
     def insert_text(self, entry: int, new_text: List[str]) -> None:
-        tag, text = self.journal[entry]["tag"], self.journal[entry]["text"]
-        if tag[0] == len(text):
-            text.extend(["", self.tags["start"], self.tags["end"]])
-            self.journal[entry]["tag"] = self.__find_tags(self.journal[entry]["text"])
-            tag = self.journal[entry]["tag"]
-        self.journal[entry]["text"] = text[: tag[1]] + new_text + text[tag[1] :]
         return
 
     def create_page(self, date: datetime, text: List[str]):
@@ -142,16 +115,3 @@ class MonicaJournal:
     def load_journal(self) -> None:
         self.journal = self.__load_journal()
         return
-
-
-def collate_entry_dates(journal: Journal) -> Dict[datetime, List[int]]:
-    dates = set(
-        datetime.combine(journal[entry]["date"].date(), datetime.min.time())
-        for entry in journal
-    )
-    entries = dict()
-    for date in dates:
-        entries[date] = [
-            entry for entry in journal if journal[entry]["date"].date() == date.date()
-        ]
-    return entries

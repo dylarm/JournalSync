@@ -78,11 +78,7 @@ def zim_to_monica_entries(
 def main():
     config = read_config()
     z = ZimJournal(config)
-    z.insert_text(0, ["test text", "other text"])
-    m = MonicaJournal(config, autoload=True)
     pprint(z.journal)
-    pprint(m.journal)
-    print(zim_to_monica_entries(z, m))
 
 
 if __name__ == "__main__":
