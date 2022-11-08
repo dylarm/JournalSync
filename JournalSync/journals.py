@@ -2,8 +2,9 @@ import os
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Tuple, Union
+from urllib.request import Request, urlopen
 
-import requests
+import json
 
 # format of Journal dict:
 # {datetime1: {entries: [int],
@@ -13,6 +14,7 @@ import requests
 #              2: [text],
 #              3: [text], etc.}}
 Journal = Dict[datetime, Dict[Union[int, str], List[Union[int, str]]]]
+Response = Dict[str, Dict[str, str]]
 
 
 class ZimJournal:
@@ -103,10 +105,15 @@ class MonicaJournal:
         if autoload:
             self.load_journal()
 
+    def __access_api(self, url: str) -> Response:
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        request = Request(method="GET", headers=headers, url=url)
+        with urlopen(request) as req:
+            response = json.loads(req.read().decode("utf-8"))
+        return response
+
     def __test_api(self) -> bool:
-        response = requests.get(
-            self.api, headers={"Authorization": f"Bearer {self.api_key}"}
-        )
+        response = self.__access_api(self.api)
         # Example json response:
         # {'success': {'message': 'Welcome to Monica'},
         #   'links': {'activities_url': 'https://MONICA_API_URL/activities',
@@ -122,21 +129,17 @@ class MonicaJournal:
         #             'relationships_url': 'https://MONICA_API_URL/contacts/:contactId/relationships',
         #             'reminders_url': 'https://MONICA_API_URL/reminders',
         #             'statistics_url': 'https://MONICA_API_URL/statistics'}}
-        r = "success" in response.json()
+        r = "success" in response
         return r
 
     def __get_journal_url(self) -> str:
-        response = requests.get(
-            self.api, headers={"Authorization": f"Bearer {self.api_key}"}
-        ).json()
+        response = self.__access_api(self.api)
         return response["links"]["journal_url"]
 
     def __load_journal(self) -> Journal:
         """Retrieve the journal from Monica and make it look nice"""
         self.journal_url = self.__get_journal_url()
-        journal = requests.get(
-            self.journal_url, headers={"Authorization": f"Bearer {self.api_key}"}
-        ).json()
+        journal: Response = self.__access_api(self.journal_url)
         new_journal = dict()
         for entry in journal["data"]:
             n = int(entry["id"])
