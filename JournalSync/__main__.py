@@ -2,13 +2,14 @@
 
 from pathlib import Path
 from typing import Dict
+from dotenv import load_dotenv
 
 import yaml
+import os
 
 from journals import MonicaJournal
 
 CONFIG_PATH = Path("./config.yaml")
-SECRET_CONFIG_PATH = Path("../secrets/config.yaml")
 
 
 def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
@@ -20,13 +21,12 @@ def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
             config_out = dict()
     secret_keys = [key for key in config_out if "MONICA_API" in str(config_out[key])]
     if secret_keys:
-        with SECRET_CONFIG_PATH.open() as stream:
-            try:
-                config_secret = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print("Could not load secret keys\n", exc)
+        load_dotenv()
         for key in secret_keys:
-            config_out[key] = config_secret[key]
+            try:
+                config_out[key] = os.environ[str(key).upper()]
+            except KeyError as e:
+                raise KeyError(f"Could not find {key} in environment: {e}")
     return config_out
 
 
