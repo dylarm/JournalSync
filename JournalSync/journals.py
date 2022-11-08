@@ -108,7 +108,6 @@ class MonicaJournal:
             self.api, headers={"Authorization": f"Bearer {self.api_key}"}
         )
         # Example json response:
-        # /home/dylan/Public/JournalSync/venv/bin/python /home/dylan/Public/JournalSync/main.py
         # {'success': {'message': 'Welcome to Monica'},
         #   'links': {'activities_url': 'https://MONICA_API_URL/activities',
         #             'addresses_url': 'https://MONICA_API_URL/addresses',

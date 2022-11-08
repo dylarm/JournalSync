@@ -8,7 +8,7 @@ import yaml
 from journals import MonicaJournal
 
 CONFIG_PATH = Path("./config.yaml")
-SECRET_CONFIG_PATH = Path("./secrets/config.yaml")
+SECRET_CONFIG_PATH = Path("../secrets/config.yaml")
 
 
 def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
