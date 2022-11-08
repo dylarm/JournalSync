@@ -1,98 +1,27 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Union, Any
 from urllib.request import Request, urlopen
 
 import json
 
 # format of Journal dict:
-# {datetime1: {entries: [int],
-#              0: [text],
-#              1: [text], etc.},
-#  datetime2: {entries: [int],
-#              2: [text],
-#              3: [text], etc.}}
-Journal = Dict[datetime, Dict[Union[int, str], List[Union[int, str]]]]
+# {datetime1: {"-1": [int as str],
+#              "0": [text],
+#              "1": [text], etc.},
+#  datetime2: {"-1": [int as str],
+#              "2": [text],
+#              "3": [text], etc.}}
+Journal = Dict[datetime, Dict[str, List[str]]]
 Response = Dict[str, Dict[str, str]]
-
-
-class ZimJournal:
-    """A plaintext-ish journal"""
-
-    def __init__(self, config):
-        self.zim: Path = Path(config["zim_journal_path"])
-        self.zim_header: List[str] = list(config["zim_header"])
-        self.title: Dict[int, str] = dict(config["titles"])
-        self.tags: Dict[str, str] = dict(config["monica_tag"])
-        self.journal: Journal = self.__load_journal()
-
-    def __load_journal(self) -> Journal:
-        files = self.zim.glob("**/*.txt")
-        new_journal = dict()
-        for n, file in enumerate(files):
-            with file.open() as f:
-                entry = f.readlines()
-            jtime = zim_path_datetime(file)
-            new_journal[jtime] = {"entries": [n], n: [line.rstrip() for line in entry]}
-            tag_loc = self.__find_tags(new_journal[jtime][n])
-            if tag_loc[0] == len(new_journal[jtime][n]):
-                new_journal[jtime][n].append(self.tags["start"])
-                new_journal[jtime][n].append(self.tags["end"])
-        return new_journal
-
-    def __create_page_header(self, date: datetime) -> List[str]:
-        new_header = self.zim_header
-        date_str = date.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
-        new_header[2] = (
-            new_header[2] + f"{date_str[:-2]}:{date_str[-2:]}"
-        )  # Because Zim is different
-        new_header.append(
-            f"{self.title[1]} {date.strftime('%A %d %b %Y')} {self.title[1]}"
-        )
-        return new_header
-
-    def __find_tags(self, text: List[str]) -> Tuple[int, int]:
-        """Returns index of start tag, and negative index to insert before end tag"""
-        try:
-            start = text.index(self.tags["start"])
-            end = text.index(self.tags["end"])
-        except ValueError:
-            start, end = len(text), len(text) - 1
-        return start, end - len(text)
-
-    def __find_monica_entry(self, dtime: datetime, title: str) -> int:
-        entry = self.journal[dtime]["entries"][0]
-        entry_text = self.journal[dtime][entry]
-        try:
-            n = entry_text.index(title)
-        except ValueError:
-            n = -1
-        return n
-
-    def find_monica_entries(self, dtime: datetime, titles: List[str]) -> List[int]:
-        entry_text = self.journal[dtime]["entries"][0]
-        monica_entries = []
-        for title in titles:
-            try:
-                monica_entries.append(entry_text.index(title))
-            except ValueError:
-                pass
-        return monica_entries
-
-    def update_page(self, dtime: datetime, entries: Dict[int, List[str]]):
-        page_text = self.journal[dtime][self.journal[dtime]["entries"][0]]
-        tags = self.__find_tags(page_text)
-        for entry in entries:
-            positions = self.find_monica_entries(dtime, entries[entry])
-            pass
-        return
+Config = Dict[str, Any]
 
 
 class MonicaJournal:
     """Getting the journal from a Monica instance via the REST API"""
 
-    def __init__(self, config, autoload=False):
+    def __init__(self, config: Config, autoload: bool = False) -> None:
         self.api: str = config["api_url"]
         self.api_key: str = config["oath_key"]
         self.monica_title_index: int = int(config["monica_title"])
@@ -109,7 +38,7 @@ class MonicaJournal:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         request = Request(method="GET", headers=headers, url=url)
         with urlopen(request) as req:
-            response = json.loads(req.read().decode("utf-8"))
+            response: Response = json.loads(req.read().decode("utf-8"))
         return response
 
     def __test_api(self) -> bool:
@@ -140,14 +69,14 @@ class MonicaJournal:
         """Retrieve the journal from Monica and make it look nice"""
         self.journal_url = self.__get_journal_url()
         journal: Response = self.__access_api(self.journal_url)
-        new_journal = dict()
+        new_journal: Journal = dict()
         for entry in journal["data"]:
-            n = int(entry["id"])
-            dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+            n = entry["id"]  # type: ignore
+            dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")  # type: ignore
+            ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")  # type: ignore
             post = create_monica_post(
-                text=entry["post"],
-                title=f"{entry['title']}, {ctime}",  # add the time so every title is unique
+                text=entry["post"],  # type: ignore
+                title=f"{entry['title']}, {ctime}",  # type: ignore
                 title_fmt=self.titles[self.monica_title_index],
                 sep=self.entry_sep,
             )
@@ -185,7 +114,7 @@ class MonicaJournal:
             text.extend(self.journal[dtime][entry])
         return text
 
-    def _write_to_zim(self):
+    def _write_to_zim(self) -> None:
         """Just brute-force writing Monica entries to Zim, overwriting if necessary
 
         This is so that I can have something that works *now*, and then can make it better later

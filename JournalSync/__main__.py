@@ -14,7 +14,7 @@ from journals import MonicaJournal
 def read_config(config: Path) -> Dict[str, str]:
     with config.open() as stream:
         try:
-            config_out = yaml.safe_load(stream)
+            config_out: Dict[str, str] = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
             config_out = dict()
@@ -29,7 +29,7 @@ def read_config(config: Path) -> Dict[str, str]:
     return config_out
 
 
-def main(config_file):
+def main(config_file: Path) -> None:
     config = read_config(config=config_file)
     m = MonicaJournal(config, autoload=True)
     print(f"Monica journal has {len(m.journal)} dates:")
