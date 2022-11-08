@@ -6,14 +6,13 @@ from dotenv import load_dotenv
 
 import yaml
 import os
+import argparse
 
 from journals import MonicaJournal
 
-CONFIG_PATH = Path("./config.yaml")
 
-
-def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
-    with CONFIG_PATH.open() as stream:
+def read_config(config: Path) -> Dict[str, str]:
+    with config.open() as stream:
         try:
             config_out = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -30,8 +29,8 @@ def read_config(config: Path = CONFIG_PATH) -> Dict[str, str]:
     return config_out
 
 
-def main():
-    config = read_config()
+def main(config_file):
+    config = read_config(config=config_file)
     m = MonicaJournal(config, autoload=True)
     print(f"Monica journal has {len(m.journal)} dates:")
     for d in m.journal:
@@ -42,4 +41,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    arg_parser = argparse.ArgumentParser(
+        prog="JournalSync.py",
+        description="Retrieve journal entries from Monica and write them in plaintext for Zim",
+    )
+    arg_parser.add_argument("-c", "--config", type=Path, default=Path("./config.yaml"))
+    args = arg_parser.parse_args()
+    main(args.config)
