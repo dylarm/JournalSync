@@ -6,6 +6,36 @@ from urllib.request import Request, urlopen
 
 import json
 
+# TODO: fix typing
+# The API returns such a convoluted type of str, int, Dict, List, and None. Example:
+# {'data': [{'account': {'id': 1},
+#            'created_at': '2022-10-31T21:10:32Z',
+#            'date': '2022-10-31T00:00:00.000000Z',
+#            'id': 1,
+#            'object': 'entry',
+#            'post': 'This is a test entry during the day, to see how it looks '
+#                    'and what somehow syncing it with Zim would look like.',
+#            'title': None,
+#            'updated_at': '2022-11-01T01:37:45Z',
+#            'url': 'https://MONICA_URL/api/journal/1',
+#            'uuid': 'c82aa72b-994e-4907-8da9-483c72e0519c'}],
+#  'links': {'first': 'https://MONICA_URL/api/journal?page=1',
+#            'last': 'https://MONICA_URL/api/journal?page=1',
+#            'next': None,
+#            'prev': None},
+#   'meta': {'current_page': 1,
+#            'from': 1,
+#            'last_page': 1,
+#            'links': [{'active': False, 'label': '❮ Previous', 'url': None},
+#                      {'active': True,
+#                       'label': '1',
+#                       'url': 'https://MONICA_URL/api/journal?page=1'},
+#                      {'active': False, 'label': 'Next ❯', 'url': None}],
+#            'path': 'https://MONICA_URL/api/journal',
+#            'per_page': 15,
+#            'to': 5,
+#            'total': 5}}
+#
 # format of Journal dict:
 # {datetime1: {"-1": [int as str],
 #              "0": [text],
@@ -14,7 +44,10 @@ import json
 #              "2": [text],
 #              "3": [text], etc.}}
 Journal = Dict[datetime, Dict[str, List[str]]]
-Response = Dict[str, Dict[str, str]]
+APIResponse = Dict[str, Dict[str, str]]
+JournalResponse = Dict[
+    str, List[Dict[str, str]]
+]  # ignoring the types that I don't need
 Config = Dict[str, Any]
 
 
@@ -34,11 +67,18 @@ class MonicaJournal:
         if autoload:
             self.load_journal()
 
-    def __access_api(self, url: str) -> Response:
+    def __access_api(self, url: str) -> APIResponse:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         request = Request(method="GET", headers=headers, url=url)
         with urlopen(request) as req:
-            response: Response = json.loads(req.read().decode("utf-8"))
+            response: APIResponse = json.loads(req.read().decode("utf-8"))
+        return response
+
+    def __access_api_endpoint(self, url: str) -> JournalResponse:
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        request = Request(method="GET", headers=headers, url=url)
+        with urlopen(request) as req:
+            response: JournalResponse = json.loads(req.read().decode("utf-8"))
         return response
 
     def __test_api(self) -> bool:
@@ -62,21 +102,21 @@ class MonicaJournal:
         return r
 
     def __get_journal_url(self) -> str:
-        response = self.__access_api(self.api)
+        response: APIResponse = self.__access_api(self.api)
         return response["links"]["journal_url"]
 
     def __load_journal(self) -> Journal:
         """Retrieve the journal from Monica and make it look nice"""
         self.journal_url = self.__get_journal_url()
-        journal: Response = self.__access_api(self.journal_url)
+        journal: JournalResponse = self.__access_api_endpoint(self.journal_url)
         new_journal: Journal = dict()
         for entry in journal["data"]:
-            n = entry["id"]  # type: ignore
-            dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")  # type: ignore
-            ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")  # type: ignore
+            n = str(entry["id"])
+            dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")
             post = create_monica_post(
-                text=entry["post"],  # type: ignore
-                title=f"{entry['title']}, {ctime}",  # type: ignore
+                text=entry["post"],
+                title=f"{entry['title']}, {ctime}",
                 title_fmt=self.titles[self.monica_title_index],
                 sep=self.entry_sep,
             )

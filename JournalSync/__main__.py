@@ -12,6 +12,8 @@ from journals import MonicaJournal
 
 
 def read_config(config: Path) -> Dict[str, str]:
+    # TODO: Fix config typing
+    # It's strictly not a Dict[str, str], but in here it doesn't matter. But in MonicaJournal, it gets complicated.
     with config.open() as stream:
         try:
             config_out: Dict[str, str] = yaml.safe_load(stream)
