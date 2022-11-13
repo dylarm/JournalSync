@@ -1,17 +1,23 @@
-from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any
-from dataclasses import dataclass, field
 import json
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from pathlib import Path
+from types import TracebackType
+from typing import Any, Dict, Optional, Type
 
 
 class CacheInterface(ABC):
     """Interface for caching"""
 
-    def __enter__(self):
+    def __enter__(self) -> Optional[CacheInterface]:
         raise NotImplementedError
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -29,24 +35,29 @@ class LocalCache(CacheInterface):
     in the form of a key pair value saved in a json file"""
 
     path: Path
-    cache: dict = field(init=False)
+    cache: Dict[str, Any] = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.cache = {}
         if Path.is_file(self.path):
             self.load_cache()
 
-    def __enter__(self):
+    def __enter__(self) -> Optional[LocalCache]:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         self.dump_cache()
 
-    def load_cache(self):
+    def load_cache(self) -> None:
         with open(self.path, "r") as cache:
             self.cache = json.load(cache)
 
-    def dump_cache(self):
+    def dump_cache(self) -> None:
         with open(self.path, "w") as cache:
             json.dump(self.cache, cache)
 
