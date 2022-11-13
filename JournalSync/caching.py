@@ -1,6 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
@@ -36,6 +37,7 @@ class LocalCache(CacheInterface):
 
     path: Path
     cache: Dict[str, Any] = field(init=False)
+    default_timeout: timedelta = timedelta(hours=1)
 
     def __post_init__(self) -> None:
         self.cache = {}
@@ -61,8 +63,15 @@ class LocalCache(CacheInterface):
         with open(self.path, "w") as cache:
             json.dump(self.cache, cache)
 
-    def put(self, key: str, data: Any) -> None:
-        self.cache[key] = data
+    def put(self, key: str, data: Any, timeout: Optional[timedelta] = None) -> None:
+        timeout_td = timeout if timeout else self.default_timeout
+        expire = datetime.now() + timeout_td
+        self.cache[key] = (expire.isoformat(), data)
 
     def get(self, key: str) -> Any:
-        return self.cache[key]
+        expire_time = datetime.fromisoformat(self.cache[key][0])
+        if datetime.now() < expire_time:
+            return self.cache[key][1]
+        else:
+            self.cache.pop(key)
+            raise KeyError("Key expired or not found")
