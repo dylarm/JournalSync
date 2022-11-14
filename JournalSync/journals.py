@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 from urllib.request import Request, urlopen
 
-from __types__ import Config, APIResponse, JournalResponse, Journal
+from __types__ import Config, APIResponse, Journal
 from caching import LocalCache, CACHE_DIR
 
 logger = logging.getLogger()
@@ -64,31 +64,6 @@ class MonicaJournal:
             response = self.__access_api_data(url)
         return response
 
-    def __access_api_endpoint_data(self, url: str) -> JournalResponse:
-        headers = {"Authorization": f"Bearer {self.api_key}"}
-        logger.debug("Requesting API endpoint data")
-        request = Request(method="GET", headers=headers, url=url)
-        with urlopen(request) as req:
-            logger.debug("Reading API endpoint data response")
-            response: JournalResponse = json.loads(req.read().decode("utf-8"))
-        return response
-
-    def __access_api_endpoint(self, url: str) -> JournalResponse:
-        if self.cache:
-            with LocalCache(CACHE_DIR) as cache:
-                try:
-                    logger.debug("Trying cache...")
-                    response: JournalResponse = cache.get(url)
-                except KeyError:
-                    logger.debug("No appropriate cached response found")
-                    response = self.__access_api_endpoint_data(url)
-                    cache.put(key=url, data=response, timeout=self.cache_timeout)
-                    logger.debug("Cache updated")
-        else:
-            logger.debug("Bypassing cache")
-            response = self.__access_api_endpoint_data(url)
-        return response
-
     def __test_api(self) -> bool:
         response = self.__access_api(self.api)
         # Example json response:
@@ -118,7 +93,7 @@ class MonicaJournal:
     def __load_journal(self) -> Journal:
         """Retrieve the journal from Monica and make it look nice"""
         self.journal_url = self.__get_journal_url()
-        journal: JournalResponse = self.__access_api_endpoint(self.journal_url)
+        journal: APIResponse = self.__access_api(self.journal_url)
         logger.info("Journal loaded")
         new_journal: Journal = dict()
         for entry in journal["data"]:

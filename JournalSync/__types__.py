@@ -39,8 +39,5 @@ from typing import Dict, List, Any
 #              "2": [text],
 #              "3": [text], etc.}}
 Journal = Dict[datetime, Dict[str, List[str]]]
-APIResponse = Dict[str, Dict[str, str]]
-JournalResponse = Dict[
-    str, List[Dict[str, str]]
-]  # ignoring the types that I don't need
+APIResponse = Dict[str, Any]  # ignoring the types that I don't need
 Config = Dict[str, Any]
