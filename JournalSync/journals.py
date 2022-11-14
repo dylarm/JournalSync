@@ -1,12 +1,15 @@
+import json
+import logging
 import os
-from caching import LocalCache
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Union, Optional
-from __types__ import Config, APIResponse, JournalResponse, Journal
 from urllib.request import Request, urlopen
 
-import json
+from __types__ import Config, APIResponse, JournalResponse, Journal
+from caching import LocalCache, CACHE_DIR
+
+logger = logging.getLogger()
 
 
 class MonicaJournal:
@@ -19,6 +22,7 @@ class MonicaJournal:
         cache: bool = True,
         cache_timeout: Optional[timedelta] = timedelta(hours=1),
     ) -> None:
+        logger.debug("Initializing MonicaJournal")
         self.api: str = config["api_url"]
         self.api_key: str = config["oath_key"]
         self.monica_title_index: int = int(config["monica_title"])
@@ -28,49 +32,60 @@ class MonicaJournal:
         self.zim_header: List[str] = list(config["zim_header"])
         self.journal_url: str = ""
         self.journal: Journal = dict()
+        logger.debug("Cache: %s (timeout: %s)", cache, cache_timeout)
         if cache:
-            self.cache: Optional[LocalCache] = LocalCache(
-                Path("cache.json"), default_timeout=cache_timeout
-            )
+            self.cache = cache
             self.cache_timeout = cache_timeout
-            print(self.cache)
-            print(self.cache_timeout)
         if autoload:
             self.load_journal()
 
     def __access_api_data(self, url: str) -> APIResponse:
         headers = {"Authorization": f"Bearer {self.api_key}"}
+        logger.debug("Sending API data request")
         request = Request(method="GET", headers=headers, url=url)
         with urlopen(request) as req:
+            logger.debug("Reading API data response")
             response: APIResponse = json.loads(req.read().decode("utf-8"))
         return response
 
     def __access_api(self, url: str) -> APIResponse:
         if self.cache:
-            try:
-                response: APIResponse = self.cache.get(url)
-            except KeyError:
-                response = self.__access_api_data(url)
-                self.cache.put(key=url, data=response, timeout=self.cache_timeout)
+            with LocalCache(CACHE_DIR) as cache:
+                try:
+                    logger.debug("Trying cache...")
+                    response: APIResponse = cache.get(url)
+                except KeyError:
+                    logger.debug("No appropriate cached response found")
+                    response = self.__access_api_data(url)
+                    cache.put(key=url, data=response, timeout=self.cache_timeout)
+                    logger.debug("Cache updated")
         else:
+            logger.debug("Bypassing cache")
             response = self.__access_api_data(url)
         return response
 
     def __access_api_endpoint_data(self, url: str) -> JournalResponse:
         headers = {"Authorization": f"Bearer {self.api_key}"}
+        logger.debug("Requesting API endpoint data")
         request = Request(method="GET", headers=headers, url=url)
         with urlopen(request) as req:
+            logger.debug("Reading API endpoint data response")
             response: JournalResponse = json.loads(req.read().decode("utf-8"))
         return response
 
     def __access_api_endpoint(self, url: str) -> JournalResponse:
         if self.cache:
-            try:
-                response: JournalResponse = self.cache.get(url)
-            except KeyError:
-                response = self.__access_api_endpoint_data(url)
-                self.cache.put(key=url, data=response, timeout=self.cache_timeout)
+            with LocalCache(CACHE_DIR) as cache:
+                try:
+                    logger.debug("Trying cache...")
+                    response: JournalResponse = cache.get(url)
+                except KeyError:
+                    logger.debug("No appropriate cached response found")
+                    response = self.__access_api_endpoint_data(url)
+                    cache.put(key=url, data=response, timeout=self.cache_timeout)
+                    logger.debug("Cache updated")
         else:
+            logger.debug("Bypassing cache")
             response = self.__access_api_endpoint_data(url)
         return response
 
@@ -91,10 +106,12 @@ class MonicaJournal:
         #             'relationships_url': 'https://MONICA_API_URL/contacts/:contactId/relationships',
         #             'reminders_url': 'https://MONICA_API_URL/reminders',
         #             'statistics_url': 'https://MONICA_API_URL/statistics'}}
+        logger.debug("Testing API: %s", response)
         r = "success" in response
         return r
 
     def __get_journal_url(self) -> str:
+        logger.debug("Getting journal URL")
         response: APIResponse = self.__access_api(self.api)
         return response["links"]["journal_url"]
 
@@ -102,8 +119,10 @@ class MonicaJournal:
         """Retrieve the journal from Monica and make it look nice"""
         self.journal_url = self.__get_journal_url()
         journal: JournalResponse = self.__access_api_endpoint(self.journal_url)
+        logger.info("Journal loaded")
         new_journal: Journal = dict()
         for entry in journal["data"]:
+            logger.debug("Dealing with journal entry: %s", entry)
             n = str(entry["id"])
             dtime = datetime.strptime(entry["date"], "%Y-%m-%dT%H:%M:%S.%fZ")
             ctime = datetime.strptime(entry["created_at"], "%Y-%m-%dT%H:%M:%SZ")
@@ -114,13 +133,16 @@ class MonicaJournal:
                 sep=self.entry_sep,
             )
             if dtime in new_journal:
+                logger.debug("Datetime already exists: %s", dtime.isoformat())
                 new_journal[dtime]["entries"].append(n)
                 new_journal[dtime][n] = post
             else:
+                logger.debug("New datetime for journal: %s", dtime.isoformat())
                 new_journal[dtime] = {"entries": [n], n: post}
         return new_journal
 
     def load_journal(self) -> None:
+        logger.debug("Loading journal")
         self.journal = self.__load_journal()
         return
 
@@ -128,6 +150,7 @@ class MonicaJournal:
         titles = []
         journal = self.journal[dtime]
         for n in journal["entries"]:
+            logger.debug("Dealing with entry %s", n)
             titles.append(journal[n][0])
         return titles
 
@@ -135,6 +158,7 @@ class MonicaJournal:
         return {dtime: self.get_titles_for_date(dtime) for dtime in self.journal}
 
     def _make_zim_page(self, dtime: datetime) -> List[str]:
+        logger.debug("Making Zim page")
         entries = self.journal[dtime]["entries"]
         text = self.zim_header.copy()
         date_str = dtime.astimezone().strftime("%Y-%m-%dT%H:%M:%S%z")
@@ -145,6 +169,7 @@ class MonicaJournal:
         text.append("")
         for entry in entries:
             text.extend(self.journal[dtime][entry])
+        logger.debug("Text for page: %s", text)
         return text
 
     def _write_to_zim(self) -> None:
@@ -153,6 +178,7 @@ class MonicaJournal:
         This is so that I can have something that works *now*, and then can make it better later
         """
         for dtime in self.journal:
+            logger.debug("Writing page for %s", dtime.date().isoformat())
             file = datetime_zim_path(dtime, root=self.zim)
             text = self._make_zim_page(dtime)
             file.write_text(os.linesep.join(text))
