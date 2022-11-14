@@ -49,8 +49,9 @@ class MonicaJournal:
         return response
 
     def __access_api(self, url: str) -> APIResponse:
+        cache: LocalCache
         if self.cache:
-            with LocalCache(CACHE_DIR) as cache:
+            with LocalCache(CACHE_DIR) as cache:  # type: ignore[assignment]
                 try:
                     logger.debug("Trying cache...")
                     response: APIResponse = cache.get(url)
@@ -88,7 +89,7 @@ class MonicaJournal:
     def __get_journal_url(self) -> str:
         logger.debug("Getting journal URL")
         response: APIResponse = self.__access_api(self.api)
-        return response["links"]["journal_url"]
+        return str(response["links"]["journal_url"])
 
     def __load_journal(self) -> Journal:
         """Retrieve the journal from Monica and make it look nice"""

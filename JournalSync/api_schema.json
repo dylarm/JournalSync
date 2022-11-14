@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "links": {
+      "type": "object",
+      "properties": {
+        "activities_url": {
+          "type": "string"
+        },
+        "addresses_url": {
+          "type": "string"
+        },
+        "calls_url": {
+          "type": "string"
+        },
+        "contacts_url": {
+          "type": "string"
+        },
+        "conversations_url": {
+          "type": "string"
+        },
+        "countries_url": {
+          "type": "string"
+        },
+        "currencies_url": {
+          "type": "string"
+        },
+        "documents_url": {
+          "type": "string"
+        },
+        "journal_url": {
+          "type": "string"
+        },
+        "notes_url": {
+          "type": "string"
+        },
+        "relationships_url": {
+          "type": "string"
+        },
+        "reminders_url": {
+          "type": "string"
+        },
+        "statistics_url": {
+          "type": "string"
+        },
+        "first": {
+          "type": "string"
+        },
+        "last": {
+          "type": "string"
+        },
+        "prev": {
+          "type": "null"
+        },
+        "next": {
+          "type": "null"
+        }
+      }
+    },
+    "data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "object": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "post": {
+            "type": "string"
+          },
+          "account": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "account",
+          "created_at",
+          "id",
+          "object",
+          "post",
+          "title",
+          "updated_at"
+        ]
+      }
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "current_page": {
+          "type": "integer"
+        },
+        "from": {
+          "type": "integer"
+        },
+        "last_page": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "per_page": {
+          "type": "integer"
+        },
+        "to": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "current_page",
+        "from",
+        "last_page",
+        "path",
+        "per_page",
+        "to",
+        "total"
+      ]
+    }
+  },
+  "required": [
+    "links"
+  ]
+}
