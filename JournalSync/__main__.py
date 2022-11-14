@@ -33,7 +33,7 @@ def read_config(config: Path) -> Dict[str, str]:
 
 def main(config_file: Path) -> None:
     config = read_config(config=config_file)
-    m = MonicaJournal(config, autoload=True)
+    m = MonicaJournal(config, autoload=True, cache=True)
     print(f"Monica journal has {len(m.journal)} dates:")
     for d in m.journal:
         print(f"\t{d.date()}: {len(m.journal[d]['entries'])} entries")

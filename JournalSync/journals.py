@@ -1,5 +1,6 @@
 import os
-from datetime import datetime
+from caching import LocalCache
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 from __types__ import Config, APIResponse, JournalResponse, Journal
@@ -11,7 +12,13 @@ import json
 class MonicaJournal:
     """Getting the journal from a Monica instance via the REST API"""
 
-    def __init__(self, config: Config, autoload: bool = False) -> None:
+    def __init__(
+        self,
+        config: Config,
+        autoload: bool = False,
+        cache: bool = True,
+        cache_timeout: Optional[timedelta] = timedelta(hours=1),
+    ) -> None:
         self.api: str = config["api_url"]
         self.api_key: str = config["oath_key"]
         self.monica_title_index: int = int(config["monica_title"])
@@ -21,21 +28,50 @@ class MonicaJournal:
         self.zim_header: List[str] = list(config["zim_header"])
         self.journal_url: str = ""
         self.journal: Journal = dict()
+        if cache:
+            self.cache: Optional[LocalCache] = LocalCache(
+                Path("cache.json"), default_timeout=cache_timeout
+            )
+            self.cache_timeout = cache_timeout
+            print(self.cache)
+            print(self.cache_timeout)
         if autoload:
             self.load_journal()
 
-    def __access_api(self, url: str) -> APIResponse:
+    def __access_api_data(self, url: str) -> APIResponse:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         request = Request(method="GET", headers=headers, url=url)
         with urlopen(request) as req:
             response: APIResponse = json.loads(req.read().decode("utf-8"))
         return response
 
-    def __access_api_endpoint(self, url: str) -> JournalResponse:
+    def __access_api(self, url: str) -> APIResponse:
+        if self.cache:
+            try:
+                response: APIResponse = self.cache.get(url)
+            except KeyError:
+                response = self.__access_api_data(url)
+                self.cache.put(key=url, data=response, timeout=self.cache_timeout)
+        else:
+            response = self.__access_api_data(url)
+        return response
+
+    def __access_api_endpoint_data(self, url: str) -> JournalResponse:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         request = Request(method="GET", headers=headers, url=url)
         with urlopen(request) as req:
             response: JournalResponse = json.loads(req.read().decode("utf-8"))
+        return response
+
+    def __access_api_endpoint(self, url: str) -> JournalResponse:
+        if self.cache:
+            try:
+                response: JournalResponse = self.cache.get(url)
+            except KeyError:
+                response = self.__access_api_endpoint_data(url)
+                self.cache.put(key=url, data=response, timeout=self.cache_timeout)
+        else:
+            response = self.__access_api_endpoint_data(url)
         return response
 
     def __test_api(self) -> bool:
