@@ -74,7 +74,7 @@ class LocalCache(CacheInterface):
     def dump_cache(self) -> None:
         with open(self.path, "w") as cache:
             logger.debug("Writing cache %s", cache)
-            json.dump(self.cache, cache)
+            json.dump(self.cache, cache, indent=4)
 
     def put(self, key: str, data: Any, timeout: Optional[timedelta] = None) -> None:
         timeout_td = timeout if timeout else self.default_timeout
