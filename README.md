@@ -1,5 +1,5 @@
 # Journal Sync
-A brief script to sync a journal from Monica to plain-text (i.e., Zim wiki)
+A brief script to sync a journal from [Monica](https://www.monicahq.com/) to plain-text (i.e., [Zim wiki](https://zim-wiki.org/))
 
 ## Currently functional
 - Connect to Monica API 
