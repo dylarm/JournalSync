@@ -1,5 +1,6 @@
 # Journal Sync
-A brief script to sync a journal from [Monica](https://www.monicahq.com/) to plain-text (i.e., [Zim wiki](https://zim-wiki.org/))
+A brief script to sync a journal from [Monica](https://www.monicahq.com/) to plain-text
+(e.g., [Zim wiki](https://zim-wiki.org/) or [Obsidian.md](https://obsidian.md))
 
 ## Currently functional
 - Connect to Monica API 
@@ -8,6 +9,11 @@ A brief script to sync a journal from [Monica](https://www.monicahq.com/) to pla
 - Checking if folder structure is already present
 
 ## Next steps
+- [ ] Add Obsidian capability
+  - [ ] Definitely need a way to represent Obsidian's structure so files are not overwritten (maybe there's a module?)
+  - [ ] Add `push` ability
+  - [ ] Allow custom heads/tags
+  - [ ] Store relevant information in front-matter in files
 - [x] Create an actual flow for syncing rather than working at it haphazardly
 - [x] Create skeleton `config.yml` file (and maybe load if populated)
 - [ ] Make folder structure if it doesn't exist (per entry)

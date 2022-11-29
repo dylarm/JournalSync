@@ -65,7 +65,9 @@ if __name__ == "__main__":
     )
     arg_parser.add_argument("-c", "--config", type=Path, default=Path("../config.yaml"))
     arg_parser.add_argument("-v", "--verbose", type=int, default=3)
+    # TODO: add argument(s) to control cache
     args = arg_parser.parse_args()
+    # TODO: change logging format for info and warning
     if args.verbose == 1:
         logger.setLevel(logging.WARNING)
     elif args.verbose == 2:

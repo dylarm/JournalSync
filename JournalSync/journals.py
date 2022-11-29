@@ -15,6 +15,9 @@ logger = logging.getLogger()
 class MonicaJournal:
     """Getting the journal from a Monica instance via the REST API"""
 
+    # TODO: Generalize to other file structures
+    # TODO: Record/observe post ID's
+
     def __init__(
         self,
         config: Config,
